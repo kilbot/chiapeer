@@ -1,0 +1,9 @@
+version: "3.9"
+services:
+  chia:
+    image: "ghcr.io/chia-network/chia:latest"
+    ports:
+      - "8555:8555"
+      - "8444:8444"
+    volumes:
+      - ${CHIA_ROOT:-~/.chia-test}:/root/.chia/
