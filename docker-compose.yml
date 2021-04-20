@@ -19,16 +19,18 @@ services:
       - app-network
 
   nginx:
-    image: nginx:mainline-alpine
+    image: nginx:latest
     container_name: nginx
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - web-root:/var/www/html
       - ./nginx:/etc/nginx/conf.d
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
+      - dhparam:/etc/ssl/certs
     depends_on:
       - nextjs
     networks:
@@ -53,6 +55,12 @@ volumes:
     driver_opts:
       type: none
       device: /home/chiapeer/web-root
+      o: bind
+  dhparam:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/chiapeer/chiapeer/dhparam/
       o: bind
 
 networks:
