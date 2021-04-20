@@ -1,9 +1,60 @@
 version: "3.9"
 services:
-  chia:
-    image: "ghcr.io/chia-network/chia:latest"
+  # chia:
+  #   image: "ghcr.io/chia-network/chia:latest"
+  #   ports:
+  #     - "8555:8555"
+  #     - "8444:8444"
+  #   volumes:
+  #     - ${CHIA_ROOT:-~/.chia}:/root/.chia/
+
+  nextjs:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    image: nextjs
+    container_name: nextjs
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:mainline-alpine
+    container_name: nginx
+    restart: unless-stopped
     ports:
-      - "8555:8555"
-      - "8444:8444"
+      - "80:80"
     volumes:
-      - ${CHIA_ROOT:-~/.chia-test}:/root/.chia/
+      - web-root:/var/www/html
+      - ./nginx:/etc/nginx/conf.d
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+    depends_on:
+      - nextjs
+    networks:
+      - app-network
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - web-root:/var/www/html
+    depends_on:
+      - nginx
+    command: certonly --webroot --webroot-path=/var/www/html --email cert@chiapeer.com --agree-tos --no-eff-email --staging -d chiapeer.com  -d www.chiapeer.com
+
+volumes:
+  certbot-etc:
+  certbot-var:
+  web-root:
+    driver: local
+    driver_opts:
+      type: none
+      device: /Users/chiapeer
+      o: bind
+
+networks:
+  app-network:
+    driver: bridge
